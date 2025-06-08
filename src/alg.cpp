@@ -2,6 +2,8 @@
 #include  <iostream>
 #include <algorithm>
 #include  <fstream>
+#include <memory>
+#include <vector>
 #include <random>
 #include  <locale>
 #include  <cstdlib>
@@ -15,7 +17,8 @@ PMTree::PMTree(const std::vector<char>& elements) {
   buildTree(root.get(), elements);
 }
 
-void PMTree::buildTree(Node* parent, const std::vector<char>& remainingElements) {
+void PMTree::buildTree(Node* parent,
+const std::vector<char>& remainingElements) {
   if (remainingElements.empty()) {
     return;
   }
@@ -47,7 +50,8 @@ size_t PMTree::countPermutations() const {
   return countPermutationsHelper(root.get());
 }
 
-void collectPermutations(const PMTree::Node* node, std::vector<char>& current, std::vector<std::vector<char>>& result) {
+void collectPermutations(const PMTree::Node* node,
+std::vector<char>& current, std::vector<std::vector<char>>& result) {
   if (!node) return;
   if (node->value != '\0') {
     current.push_back(node->value);
@@ -79,7 +83,8 @@ std::vector<char> getPerm1(const PMTree& tree, int num) {
   return allPerms[num - 1];
 }
 
-bool getPermHelper(const PMTree::Node* node, int& remaining, std::vector<char>& result) {
+bool getPermHelper(const PMTree::Node* node,
+int& remaining, std::vector<char>& result) {
   if (!node) return false;
   if (node->value != '\0') {
     result.push_back(node->value);
@@ -118,40 +123,32 @@ void runExperiment() {
   const std::vector<int> sizes = { 1, 2, 3, 4, 5, 6, 7, 8 };
   std::ofstream results("experiment_results.csv");
   results << "n,getAllPerms,getPerm1,getPerm2\n";
-  
   for (int n : sizes) {
     std::vector<char> in;
     for (int i = 0; i < n; ++i) {
       in.push_back('1' + i);
     }
-    
     PMTree tree(in);
-    
     auto start = std::chrono::high_resolution_clock::now();
     std::vector<std::vector<char>> perms = getAllPerms(tree);
     auto end = std::chrono::high_resolution_clock::now();
     double duration_all = std::chrono::duration<double>(end - start).count();
-    
     std::random_device rd;
     std::mt19937 gen(rd());
     std::uniform_int_distribution<int> dist(1, static_cast<int>(perms.size()));
     int random_index = dist(gen);
-    
     start = std::chrono::high_resolution_clock::now();
     std::vector<char> result1 = getPerm1(tree, random_index);
     end = std::chrono::high_resolution_clock::now();
     double duration1 = std::chrono::duration<double>(end - start).count();
-    
     start = std::chrono::high_resolution_clock::now();
     std::vector<char> result2 = getPerm2(tree, random_index);
     end = std::chrono::high_resolution_clock::now();
     double duration2 = std::chrono::duration<double>(end - start).count();
-    
     results << n << ","
       << duration_all << ","
       << duration1 << ","
       << duration2 << "\n";
   }
-
   results.close();
 }
